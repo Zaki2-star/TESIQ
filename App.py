@@ -7,9 +7,9 @@ from io import BytesIO
 import base64
 from pathlib import Path
 
-# Path file
-file_path = 'data/198_Peserta_Perhitungan_IQ.xlsx'
-image_path = 'static\paper-brain-with-light-bulb.jpg'
+# Path file (gunakan relative path)
+file_path = 'data/198_Peserta_Perhitungan_IQ.xlsx'  # Gunakan relative path
+image_path = 'static/paper-brain-with-light-bulb.jpg'  # Gunakan relative path
 
 # Load dataset
 data = pd.read_excel(file_path)
@@ -66,7 +66,7 @@ def create_distribution_graph(mean, std_dev, raw_score):
     plt.axhline(mean, color='red', linestyle='dashed', label=f"Mean IQ: {mean:.2f}")
 
     # Menambahkan garis untuk skor IQ pengguna
-    user_iq = mean + (raw_score - raw_score) * (std_dev / 15)  # IQ pengguna (biasanya akan dihitung berdasarkan input)
+    user_iq = 100 + 15 * (raw_score - mean) / std_dev  # IQ pengguna berdasarkan skor mentah
     plt.axvline(raw_score, color='green', linestyle='dashed', label=f"Skor Mentah: {raw_score}")
 
     # Memberikan keterangan tambahan untuk garis
@@ -82,11 +82,12 @@ def create_distribution_graph(mean, std_dev, raw_score):
     plt.grid(True)
     plt.legend()
 
-    # Menyimpan grafik ke dalam file sementara
-    temp_file = "temp_graph.png"
-    plt.savefig(temp_file, bbox_inches='tight')
+    # Menyimpan grafik ke dalam buffer
+    buf = BytesIO()
+    plt.savefig(buf, format="png")
+    buf.seek(0)
     plt.close()
-    return temp_file
+    return buf
 
 # Fungsi untuk membuat PDF dengan header dan footer
 def generate_pdf(iq, category, raw_score, name, graph_file_path):
@@ -137,9 +138,6 @@ def generate_pdf(iq, category, raw_score, name, graph_file_path):
     buffer.write(pdf.output(dest='S').encode('latin1'))
     buffer.seek(0)
 
-    # Hapus file sementara
-    Path(graph_file_path).unlink()
-
     return buffer
 
 # Streamlit UI
@@ -176,3 +174,4 @@ if st.button("Hitung IQ"):
         file_name="Hasil_Test_IQ.pdf",
         mime="application/pdf"
     )
+
