@@ -9,7 +9,7 @@ from pathlib import Path
 
 # Path file (gunakan relative path)
 file_path = '198_Peserta_Perhitungan_IQ.xlsx'  # Gunakan relative path
-image_path = 'static/paper-brain-with-light-bulb.jpg'  # Gunakan relative path
+image_path = 'paper-brain-with-light-bulb.jpg'  # Gunakan relative path
 
 # Load dataset
 data = pd.read_excel(file_path)
