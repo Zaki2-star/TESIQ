@@ -66,7 +66,7 @@ def create_distribution_graph(mean, std_dev, raw_score):
     plt.axhline(mean, color='red', linestyle='dashed', label=f"Mean IQ: {mean:.2f}")
 
     # Menambahkan garis untuk skor IQ pengguna
-    user_iq = 100 + 15 * (raw_score - mean) / std_dev  # IQ pengguna berdasarkan skor mentah
+    user_iq = mean + (raw_score - raw_score) * (std_dev / 15)  # IQ pengguna (biasanya akan dihitung berdasarkan input)
     plt.axvline(raw_score, color='green', linestyle='dashed', label=f"Skor Mentah: {raw_score}")
 
     # Memberikan keterangan tambahan untuk garis
@@ -82,12 +82,11 @@ def create_distribution_graph(mean, std_dev, raw_score):
     plt.grid(True)
     plt.legend()
 
-    # Menyimpan grafik ke dalam buffer
-    buf = BytesIO()
-    plt.savefig(buf, format="png")
-    buf.seek(0)
+    # Menyimpan grafik ke dalam file sementara
+    temp_file_path = "temp_graph.png"  # Simpan di lokasi saat ini
+    plt.savefig(temp_file_path, bbox_inches='tight')
     plt.close()
-    return buf
+    return temp_file_path
 
 # Fungsi untuk membuat PDF dengan header dan footer
 def generate_pdf(iq, category, raw_score, name, graph_file_path):
@@ -101,7 +100,6 @@ def generate_pdf(iq, category, raw_score, name, graph_file_path):
     pdf.set_font("Arial", style='B', size=16)
     pdf.cell(200, 10, txt="Aplikasi Tes IQ", ln=True, align='C')
     pdf.set_font("Arial", style='I', size=12)
-    
 
     # Informasi Nilai IQ
     pdf.set_font("Arial", size=12)
@@ -112,31 +110,39 @@ def generate_pdf(iq, category, raw_score, name, graph_file_path):
     pdf.cell(200, 10, txt=f"Skor Mentah: {raw_score}", ln=True, align='L')
     pdf.ln(10)
 
-    # Menambahkan grafik
-    pdf.image(graph_file_path, x=10, y=None, w=190)
-    pdf.ln(10)
+    # Cek apakah file gambar tersedia sebelum menambahkannya ke PDF
+    try:
+        if os.path.exists(graph_file_path):
+            pdf.image(graph_file_path, x=10, y=None, w=190)
+        else:
+            st.error(f"File gambar tidak ditemukan di path {graph_file_path}")
+            return None
+    except Exception as e:
+        st.error(f"Error menambahkan gambar ke PDF: {e}")
+        return None
 
     # Keterangan grafik
     pdf.set_font("Arial", size=10)
     pdf.multi_cell(0, 10, txt=f"""
     1. Grafik di atas menunjukkan hubungan antara skor mentah dan nilai IQ.
     2. Garis putus-putus merah menggambarkan nilai rata-rata IQ (Mean: {mean_score:.2f}).
-    3. Garis putus-putus hijau menunjukkan posisi skor mentah pengguna (Skor Mentah: {raw_score}).""")
-
-    # Menambahkan jarak 10 cm 
-    pdf.ln(7.08)  # Menambahkan jarak vertikal sekitar 5 cm
+    3. Garis putus-putus hijau menunjukkan posisi skor mentah pengguna (Skor Mentah: {raw_score}).
+    """)
 
     # Menambahkan kalimat inspiratif di tengah dengan format cetak miring dan kotak biru muda
     pdf.set_fill_color(173, 216, 230)  # Warna biru muda (RGB: 173, 216, 230)
     pdf.set_font("Arial", style='I', size=10)
     pdf.cell(0, 10, txt=" ~ Bukan tentang seberapa pintar Kamu, melainkan seberapa baik Kamu mengenali potensi diri sendiri ~", 
-            align='C', ln=True, fill=True)  # fill=True untuk memberi warna latar belakang
-
+             align='C', ln=True, fill=True)  # fill=True untuk memberi warna latar belakang
 
     # Simpan PDF ke buffer
     buffer = BytesIO()
     buffer.write(pdf.output(dest='S').encode('latin1'))
     buffer.seek(0)
+
+    # Hapus file grafik sementara setelah selesai
+    if os.path.exists(graph_file_path):
+        os.remove(graph_file_path)
 
     return buffer
 
@@ -168,10 +174,10 @@ if st.button("Hitung IQ"):
     pdf_buffer = generate_pdf(iq, category, raw_score, name, graph_file_path)
 
     # Download PDF
-    st.download_button(
-        label="📥 Download Hasil PDF",
-        data=pdf_buffer,
-        file_name="Hasil_Test_IQ.pdf",
-        mime="application/pdf"
-    )
-
+    if pdf_buffer:
+        st.download_button(
+            label="📥 Download Hasil PDF",
+            data=pdf_buffer,
+            file_name="Hasil_Test_IQ.pdf",
+            mime="application/pdf"
+        )
