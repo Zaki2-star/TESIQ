@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from fpdf import FPDF
 from io import BytesIO
 import base64
-from pathlib import Path
+import os  # Menambahkan os untuk menangani pengecekan file
 
 # Path file (gunakan relative path)
 file_path = '198_Peserta_Perhitungan_IQ.xlsx'  # Gunakan relative path
