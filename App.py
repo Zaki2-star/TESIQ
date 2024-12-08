@@ -8,8 +8,8 @@ import base64
 from pathlib import Path
 
 # Path file
-file_path = r'D:\TUGAS AKHIR\IQ\198_Peserta_Perhitungan_IQ.xlsx'
-image_path = r'D:\TUGAS AKHIR\IQ\static\paper-brain-with-light-bulb.jpg'
+file_path = 'data/198_Peserta_Perhitungan_IQ.xlsx'
+image_path = 'static\paper-brain-with-light-bulb.jpg'
 
 # Load dataset
 data = pd.read_excel(file_path)
